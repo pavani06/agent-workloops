@@ -1,0 +1,608 @@
+<title>Anatomia do Workloop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root{
+  --ground:#f1f3f6; --surface:#ffffff; --surface-2:#e7eaef; --sunk:#dfe3ea;
+  --ink:#191d25; --ink-2:#495264; --ink-3:#727c8f; --rule:#d1d6de;
+  --seal:#8f2d3f; --blind:#3c5c88; --ok:#2f6b4f; --warn:#87621a;
+  --seal-wash:#f6e9eb; --blind-wash:#e8eef7;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#12151b; --surface:#1a1e26; --surface-2:#222731; --sunk:#161a21;
+    --ink:#e7e9ee; --ink-2:#a9b1c0; --ink-3:#7b8496; --rule:#2c3240;
+    --seal:#d97e8e; --blind:#83a7da; --ok:#6cbe94; --warn:#d2a552;
+    --seal-wash:#2a1a1f; --blind-wash:#18202e;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#12151b; --surface:#1a1e26; --surface-2:#222731; --sunk:#161a21;
+  --ink:#e7e9ee; --ink-2:#a9b1c0; --ink-3:#7b8496; --rule:#2c3240;
+  --seal:#d97e8e; --blind:#83a7da; --ok:#6cbe94; --warn:#d2a552;
+  --seal-wash:#2a1a1f; --blind-wash:#18202e;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1060px; margin:0 auto; padding:0 24px 96px}
+.col{max-width:68ch}
+
+/* ---------- cabeçalho ---------- */
+header{padding:72px 0 48px; border-bottom:1px solid var(--rule); margin-bottom:56px}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--seal); margin:0 0 20px;
+}
+h1{
+  font-family:Spectral,Georgia,serif; font-weight:600; font-size:clamp(38px,6vw,60px);
+  line-height:1.06; letter-spacing:-.015em; margin:0 0 22px; text-wrap:balance;
+}
+.lede{font-size:19px; line-height:1.6; color:var(--ink-2); margin:0; max-width:60ch}
+.lede em{font-style:normal; color:var(--ink); border-bottom:2px solid var(--seal); padding-bottom:1px}
+
+.facts{
+  display:flex; flex-wrap:wrap; gap:0; margin-top:40px;
+  border:1px solid var(--rule); border-radius:3px; overflow:hidden; background:var(--surface);
+}
+.fact{flex:1 1 150px; padding:16px 18px; border-right:1px solid var(--rule)}
+.fact:last-child{border-right:none}
+.fact dt{
+  font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--ink-3); margin:0 0 6px;
+}
+.fact dd{margin:0; font-size:15px; font-weight:500; font-variant-numeric:tabular-nums}
+
+/* ---------- seções ---------- */
+section{margin-bottom:72px}
+h2{
+  font-family:Spectral,Georgia,serif; font-weight:600; font-size:30px; line-height:1.2;
+  margin:0 0 8px; letter-spacing:-.01em; text-wrap:balance;
+}
+h3{font-size:17px; font-weight:600; margin:36px 0 10px; letter-spacing:-.005em}
+.stage-tag{
+  display:inline-block; font-family:"IBM Plex Mono",monospace; font-size:12px;
+  letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3);
+  border:1px solid var(--rule); border-radius:2px; padding:3px 9px; margin-bottom:14px;
+}
+p{margin:0 0 16px}
+a{color:var(--seal)}
+strong{font-weight:600}
+code{
+  font-family:"IBM Plex Mono",monospace; font-size:.88em; background:var(--surface-2);
+  padding:1px 5px; border-radius:2px; color:var(--ink);
+}
+
+/* ---------- figuras ---------- */
+figure{margin:32px 0; padding:0}
+.figbox{
+  background:var(--surface); border:1px solid var(--rule); border-radius:3px;
+  padding:24px; overflow-x:auto;
+}
+figure svg{display:block; width:100%; min-width:520px; height:auto; color:var(--ink)}
+/* texto em SVG nao herda color: sem fill explicito o padrao e preto, invisivel no tema
+   escuro. currentColor resolve pelo --ink; as classes de accent abaixo tem prioridade. */
+figure svg text{fill:currentColor}
+/* accents dentro do SVG resolvem pelos tokens: hex literal quebraria no tema escuro */
+figure svg .s-seal{stroke:var(--seal)}
+figure svg .f-seal{fill:var(--seal)}
+figure svg .s-blind{stroke:var(--blind)}
+figure svg .f-blind{fill:var(--blind)}
+figcaption{
+  margin-top:12px; font-size:14px; line-height:1.55; color:var(--ink-2); max-width:70ch;
+}
+figcaption b{color:var(--ink); font-weight:600}
+
+/* ---------- tabelas ---------- */
+.tbl-wrap{overflow-x:auto; margin:24px 0}
+table{
+  width:100%; border-collapse:collapse; font-size:14px; background:var(--surface);
+  border:1px solid var(--rule); border-radius:3px;
+}
+th,td{padding:9px 14px; text-align:left; border-bottom:1px solid var(--rule)}
+th{
+  font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--ink-3); font-weight:500; background:var(--sunk);
+}
+tbody tr:last-child td{border-bottom:none}
+td.num{font-variant-numeric:tabular-nums; font-family:"IBM Plex Mono",monospace}
+td.mono,th.mono{font-family:"IBM Plex Mono",monospace; font-size:13px}
+
+/* ---------- notas ---------- */
+.note{
+  border-left:3px solid var(--seal); background:var(--seal-wash);
+  padding:16px 20px; margin:24px 0; border-radius:0 3px 3px 0;
+}
+.note.blind{border-left-color:var(--blind); background:var(--blind-wash)}
+.note p:last-child{margin-bottom:0}
+.note .lbl{
+  font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.11em;
+  text-transform:uppercase; color:var(--seal); display:block; margin-bottom:6px;
+}
+.note.blind .lbl{color:var(--blind)}
+
+ul{margin:0 0 16px; padding-left:22px}
+li{margin-bottom:8px}
+li::marker{color:var(--ink-3)}
+
+.split{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; margin:24px 0}
+.card{background:var(--surface); border:1px solid var(--rule); border-radius:3px; padding:18px 20px}
+.card h4{
+  margin:0 0 8px; font-size:14px; font-family:"IBM Plex Mono",monospace;
+  font-weight:500; letter-spacing:.04em;
+}
+.card p{font-size:14.5px; color:var(--ink-2); margin:0}
+
+footer{border-top:1px solid var(--rule); padding-top:24px; color:var(--ink-3); font-size:13.5px}
+</style>
+
+<div class="wrap">
+<header>
+  <p class="eyebrow">Mapa de processo · ~/agent-workloops</p>
+  <h1>Anatomia do Workloop</h1>
+  <p class="lede">Um processo para fazer um agente executar dezenas de unidades de trabalho encadeadas, ao longo de várias sessões, sem que o operador precise revisar cada linha e sem que o agente decida o que só o operador pode decidir: <em>todo o estado vive em artefatos persistidos, nunca na memória da sessão</em>, e é isso que torna o trabalho maior do que uma sessão.</p>
+
+  <dl class="facts">
+    <div class="fact"><dt>Camadas</dt><dd>3</dd></div>
+    <div class="fact"><dt>Condições de parada</dt><dd>8</dd></div>
+    <div class="fact"><dt>Gates não delegáveis</dt><dd>6</dd></div>
+    <div class="fact"><dt>Templates</dt><dd>6</dd></div>
+    <div class="fact"><dt>Caso de origem</dt><dd>15 issues</dd></div>
+  </dl>
+</header>
+
+<!-- ============ 1. CICLO INDIVIDUAL ============ -->
+<section>
+  <div class="col">
+    <span class="stage-tag">Ciclo individual · relay</span>
+    <h2>O caminho de uma issue</h2>
+    <p>Este é o modo individual, o padrão: uma issue, um executor, dois gates humanos no caminho. O pré-voo lê os handoffs dos blockers antes do plano, porque o plano é o que se pretendia e o handoff é o que aconteceu: divergência entre os dois sobe ao operador, nunca é absorvida em silêncio. No fim do ciclo, o handoff desta issue viaja dentro do PR e vira o pré-voo da próxima.</p>
+  </div>
+
+  <figure>
+    <div class="figbox">
+      <svg viewBox="0 0 760 610" role="img" aria-label="Fluxo vertical do ciclo de uma issue: pré-voo lendo handoffs dos blockers antes do plano; diretiva postada no tracker; gate humano de aprovação nomeada; implementar em worktree isolada; verificar com suite, golden e CI; review adversarial por segundo agente, cujo FAIL retorna para implementar com teto de 2 rodadas e, após o teto, para em PARADA que sobe ao operador; gate humano de ship it; finish com merge e handoff no PR.">
+        <defs>
+          <marker id="wa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+          <marker id="was" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" class="f-seal"/>
+          </marker>
+        </defs>
+        <g font-family="IBM Plex Sans, sans-serif" font-size="12.5">
+
+          <!-- pre-voo -->
+          <rect x="40" y="14" width="250" height="46" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="165" y="33" text-anchor="middle" font-weight="500">pré-voo</text>
+          <text x="165" y="50" text-anchor="middle" font-size="10" opacity=".7">ler handoffs dos blockers antes do plano</text>
+          <line x1="165" y1="60" x2="165" y2="82" stroke="currentColor" stroke-width="1.2" marker-end="url(#wa)"/>
+
+          <!-- diretiva -->
+          <rect x="40" y="84" width="250" height="46" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="165" y="103" text-anchor="middle" font-weight="500">diretiva postada no tracker</text>
+          <text x="165" y="120" text-anchor="middle" font-size="10" opacity=".7">formato fixo de 7 seções · comentário na issue</text>
+          <line x1="165" y1="130" x2="165" y2="152" stroke="currentColor" stroke-width="1.2" marker-end="url(#wa)"/>
+
+          <!-- gate 1: aprovacao nomeada -->
+          <rect x="40" y="154" width="250" height="46" rx="2" fill="none" class="s-seal" stroke-width="1.6"/>
+          <text x="165" y="173" text-anchor="middle" font-weight="600" class="f-seal">GATE · aprovação nomeada</text>
+          <text x="165" y="190" text-anchor="middle" font-size="10" class="f-seal" opacity=".85">parar e aguardar o operador</text>
+          <line x1="165" y1="200" x2="165" y2="222" class="s-seal" stroke-width="1.2" marker-end="url(#was)"/>
+
+          <!-- implementar -->
+          <rect x="40" y="224" width="250" height="46" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="165" y="243" text-anchor="middle" font-weight="500">implementar em worktree isolada</text>
+          <text x="165" y="260" text-anchor="middle" font-size="10" opacity=".7">edição cirúrgica, só o que a diretiva pede</text>
+          <line x1="165" y1="270" x2="165" y2="292" stroke="currentColor" stroke-width="1.2" marker-end="url(#wa)"/>
+
+          <!-- verificar -->
+          <rect x="40" y="294" width="250" height="46" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="165" y="313" text-anchor="middle" font-weight="500">verificar</text>
+          <text x="165" y="330" text-anchor="middle" font-size="10" opacity=".7">suite + golden + CI: sem verde não há PR</text>
+          <line x1="165" y1="340" x2="165" y2="362" stroke="currentColor" stroke-width="1.2" marker-end="url(#wa)"/>
+
+          <!-- review adversarial -->
+          <rect x="40" y="364" width="250" height="46" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="165" y="383" text-anchor="middle" font-weight="500">review adversarial</text>
+          <text x="165" y="400" text-anchor="middle" font-size="10" opacity=".7">segundo agente · PASS ou FAIL com file:line</text>
+          <line x1="165" y1="410" x2="165" y2="432" stroke="currentColor" stroke-width="1.2" marker-end="url(#wa)"/>
+
+          <!-- gate 2: ship it -->
+          <rect x="40" y="434" width="250" height="46" rx="2" fill="none" class="s-seal" stroke-width="1.6"/>
+          <text x="165" y="453" text-anchor="middle" font-weight="600" class="f-seal">GATE · "ship it"</text>
+          <text x="165" y="470" text-anchor="middle" font-size="10" class="f-seal" opacity=".85">nada de merge antes disso</text>
+          <line x1="165" y1="480" x2="165" y2="502" stroke="currentColor" stroke-width="1.2" marker-end="url(#wa)"/>
+
+          <!-- finish -->
+          <rect x="40" y="504" width="250" height="46" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="165" y="523" text-anchor="middle" font-weight="500">finish</text>
+          <text x="165" y="540" text-anchor="middle" font-size="10" opacity=".7">merge · handoff dentro do PR · limpar worktree</text>
+
+          <!-- loop de fail: review volta para implementar -->
+          <g stroke="currentColor" stroke-width="1.2" fill="none">
+            <line x1="290" y1="387" x2="545" y2="387"/>
+            <line x1="545" y1="387" x2="545" y2="247"/>
+            <line x1="545" y1="247" x2="294" y2="247" marker-end="url(#wa)"/>
+          </g>
+          <text x="557" y="308" font-size="10.5" opacity=".75">review FAIL</text>
+          <text x="557" y="324" font-size="11" font-weight="500">teto de 2 rodadas</text>
+
+          <!-- parada: sobe ao operador -->
+          <line x1="545" y1="387" x2="545" y2="450" class="s-seal" stroke-width="1.4" marker-end="url(#was)"/>
+          <text x="557" y="420" font-size="10.5" class="f-seal" opacity=".9">2 rodadas sem convergência</text>
+          <rect x="390" y="452" width="300" height="56" rx="2" fill="none" class="s-seal" stroke-width="1.4" stroke-dasharray="5 3"/>
+          <text x="540" y="474" text-anchor="middle" font-weight="600" class="f-seal">PARADA · sobe ao operador</text>
+          <text x="540" y="492" text-anchor="middle" font-size="10" class="f-seal" opacity=".85">o problema é de desenho, não de execução</text>
+
+          <text x="380" y="588" text-anchor="middle" font-size="11" opacity=".7">o que muda entre issues não é o ciclo: é quem assina os dois gates</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption><b>Os dois retângulos vermelhos são os únicos pontos onde o ciclo espera um humano.</b> No modo individual, ambos são sempre do operador; no lote, ambos podem ser delegados por segmento: a diretiva, se fiel ao plano; o ship it, se o review der PASS. O teto de 2 rodadas existe porque dois FAILs seguidos na mesma issue significam que executor e revisor não convergem sobre o que a issue deveria ser: o problema é de desenho, e sobe. Foi acionado uma vez no caso de origem, e o operador resolveu em uma mensagem o que viraria rodadas de correção circular.</figcaption>
+  </figure>
+</section>
+<!-- ============ 2. ONDE O ESTADO VIVE ============ -->
+<section>
+  <div class="col">
+    <span class="stage-tag">Bootstrap de sessão fria</span>
+    <h2>Onde o estado vive</h2>
+    <p>O teste real do framework: uma sessão nova, sem nenhum contexto, recebe <code>execute a #N</code> e precisa chegar ao trabalho correto lendo apenas artefatos. Nenhuma sessão anterior, vault ou memória é requerida; as camadas abaixo carregam todo o estado. Na retomada após crash, a mesma rota mais os últimos comentários do tracker do loop bastam para achar órfãos: PR aberto de issue em voo se retoma do ponto; worktree com trabalho sem PR pergunta ao operador antes de qualquer coisa.</p>
+  </div>
+
+  <figure>
+    <div class="figbox">
+      <svg viewBox="0 0 760 480" role="img" aria-label="Pilha de artefatos que uma sessão de zero contexto atravessa, em ordem: a sessão fria recebe execute a #N; AGENTS.md, o contrato do repo; o épico, com grafo de dependências e checklist; os handoffs dos blockers, lidos antes do plano; a diretiva postada na issue; e o trabalho, retomado no ponto exato. Se a rota falha, o framework está quebrado.">
+        <defs>
+          <marker id="wb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+        <g font-family="IBM Plex Sans, sans-serif" font-size="12.5">
+
+          <!-- entrada fria -->
+          <rect x="20" y="16" width="210" height="58" rx="2" fill="none" class="s-blind" stroke-width="1.6"/>
+          <text x="125" y="38" text-anchor="middle" font-weight="600" class="f-blind">sessão fria</text>
+          <text x="125" y="56" text-anchor="middle" font-size="9.5" class="f-blind" opacity=".9" font-family="IBM Plex Mono, monospace">zero contexto · execute a #N</text>
+          <text x="260" y="34" font-size="11" font-weight="500" class="f-blind">a sessão começa não sabendo nada</text>
+          <text x="260" y="50" font-size="10" class="f-blind" opacity=".85">nenhum vault, nenhuma memória, nenhuma sessão anterior é requerida</text>
+          <line x1="125" y1="74" x2="125" y2="100" stroke="currentColor" stroke-width="1.2" marker-end="url(#wb)"/>
+
+          <!-- camada 1: contrato do repo -->
+          <rect x="20" y="104" width="430" height="54" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="36" y="126" font-family="IBM Plex Mono, monospace" font-size="12" font-weight="500">AGENTS.md</text>
+          <text x="36" y="143" font-size="10" opacity=".7">contrato do repo: as regras que valem para toda issue</text>
+          <line x1="235" y1="158" x2="235" y2="170" stroke="currentColor" stroke-width="1.2" marker-end="url(#wb)"/>
+
+          <!-- camada 2: epico -->
+          <rect x="20" y="172" width="430" height="54" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="36" y="194" font-family="IBM Plex Mono, monospace" font-size="12" font-weight="500">épico</text>
+          <text x="36" y="211" font-size="10" opacity=".7">grafo de dependências + checklist de fechamento</text>
+          <line x1="235" y1="226" x2="235" y2="238" stroke="currentColor" stroke-width="1.2" marker-end="url(#wb)"/>
+
+          <!-- camada 3: handoffs dos blockers -->
+          <rect x="20" y="240" width="430" height="54" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="36" y="262" font-family="IBM Plex Mono, monospace" font-size="12" font-weight="500">handoffs dos blockers</text>
+          <text x="36" y="279" font-size="10" opacity=".7">lidos antes do plano: o que aconteceu, não o que se pretendia</text>
+          <line x1="235" y1="294" x2="235" y2="306" stroke="currentColor" stroke-width="1.2" marker-end="url(#wb)"/>
+
+          <!-- camada 4: diretiva -->
+          <rect x="20" y="308" width="430" height="54" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="36" y="330" font-family="IBM Plex Mono, monospace" font-size="12" font-weight="500">diretiva postada na issue</text>
+          <text x="36" y="347" font-size="10" opacity=".7">o contrato de execução desta unidade</text>
+          <line x1="235" y1="362" x2="235" y2="374" stroke="currentColor" stroke-width="1.2" marker-end="url(#wb)"/>
+
+          <!-- camada 5: trabalho -->
+          <rect x="20" y="376" width="430" height="54" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <text x="36" y="398" font-family="IBM Plex Mono, monospace" font-size="12" font-weight="500">trabalho</text>
+          <text x="36" y="415" font-size="10" opacity=".7">retomado no ponto exato onde parou</text>
+
+          <!-- anotações: o que a sessão faz com cada camada -->
+          <g font-family="IBM Plex Mono, monospace" font-size="9.5" opacity=".8">
+            <line x1="450" y1="131" x2="464" y2="131" stroke="currentColor" stroke-width="1" opacity=".4"/>
+            <text x="470" y="134">lido inteiro, antes de qualquer plano</text>
+            <line x1="450" y1="199" x2="464" y2="199" stroke="currentColor" stroke-width="1" opacity=".4"/>
+            <text x="470" y="202">blockers conferidos no tracker,</text>
+            <text x="470" y="215">nunca por memória</text>
+            <line x1="450" y1="267" x2="464" y2="267" stroke="currentColor" stroke-width="1" opacity=".4"/>
+            <text x="470" y="270">divergência entre handoff e plano</text>
+            <text x="470" y="283">sobe, nunca é absorvida em silêncio</text>
+            <line x1="450" y1="335" x2="464" y2="335" stroke="currentColor" stroke-width="1" opacity=".4"/>
+            <text x="470" y="338">sem diretiva postada: escrever</text>
+            <text x="470" y="351">e parar para aprovação nomeada</text>
+            <line x1="450" y1="403" x2="464" y2="403" stroke="currentColor" stroke-width="1" opacity=".4"/>
+            <text x="470" y="406">o estado vive no tracker,</text>
+            <text x="470" y="419">nunca em memória de sessão</text>
+          </g>
+
+          <text x="20" y="462" font-size="11" class="f-seal">se esta rota falha, o framework está quebrado, independente de quão bem a sessão atual está indo</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption><b>A ordem importa.</b> Os handoffs dos blockers são lidos antes do plano: o plano é o que se pretendia, o handoff é o que aconteceu, e divergência entre os dois é sinal, não ruído. A diretiva é verificada nos comentários da issue: sem diretiva postada, a sessão a escreve e para para aprovação; com diretiva postada e o operador citando a issue, implementa.</figcaption>
+  </figure>
+
+  <div class="note">
+    <span class="lbl">Teste de propósito</span>
+    <p>Se esta rota falha, o framework está quebrado, independente de quão bem a sessão atual esteja indo. Teste-a de propósito, em uma sessão limpa, pelo menos uma vez por fase: é a única prova de que o estado de fato vive nos artefatos, e não na sessão que por acaso ainda está aberta.</p>
+  </div>
+</section>
+<!-- ============ 3. MODO EM LOTE ============ -->
+<section>
+  <div class="col">
+    <span class="stage-tag">Loop · segmentos e gates delegados</span>
+    <h2>O modo em lote</h2>
+    <p>Para a cadeia principal, quando o operador quer várias issues por sessão: o runbook define segmentos com parada obrigatória ao fim de cada um, gates delegados por segmento, e disciplina de seleção conferida no tracker, nunca por memória. O orçamento de fôlego é explícito: nunca iniciar uma issue que a sessão não tem fôlego para terminar; fim de sessão para em fronteira de issue, nunca no meio, com o estado comentado no tracker do loop. Nada do ciclo por issue é dispensado no lote: o que muda é quem assina os gates.</p>
+  </div>
+
+  <figure>
+    <div class="figbox">
+      <svg viewBox="0 0 760 425" role="img" aria-label="Estrutura de segmentos do modo em lote: dois gates delegados por issue do segmento, aprovação de diretiva fiel ao plano e ship it pós review PASS; uma cadeia de issues dentro do segmento 1 termina em parada obrigatória com relatório na issue do loop; a frase de lançamento do operador, nomeando runbook, issue, segmento, gates e data e hora, rearma o segmento 2.">
+        <defs>
+          <marker id="wc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+          <marker id="wcs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" class="f-seal"/>
+          </marker>
+        </defs>
+        <g font-family="IBM Plex Sans, sans-serif" font-size="12.5">
+
+          <!-- gates delegados -->
+          <rect x="20" y="18" width="330" height="30" rx="2" fill="none" class="s-seal" stroke-width="1.3" stroke-dasharray="5 3"/>
+          <text x="185" y="37" text-anchor="middle" font-size="11" font-weight="600" class="f-seal">delegado · aprovação de diretiva fiel ao plano</text>
+          <rect x="370" y="18" width="370" height="30" rx="2" fill="none" class="s-seal" stroke-width="1.3" stroke-dasharray="5 3"/>
+          <text x="555" y="37" text-anchor="middle" font-size="11" font-weight="600" class="f-seal">delegado · ship it pós review PASS</text>
+
+          <!-- segmento 1 -->
+          <rect x="20" y="64" width="440" height="118" rx="2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="6 4"/>
+          <text x="34" y="86" font-family="IBM Plex Mono, monospace" font-size="10.5" opacity=".7">segmento 1</text>
+          <g stroke="currentColor" stroke-width="1.3" fill="none">
+            <rect x="36" y="100" width="112" height="44" rx="2"/>
+            <rect x="168" y="100" width="112" height="44" rx="2"/>
+            <rect x="300" y="100" width="112" height="44" rx="2"/>
+          </g>
+          <g text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" font-weight="500">
+            <text x="92" y="120">issue #&lt;a&gt;</text>
+            <text x="224" y="120">issue #&lt;b&gt;</text>
+            <text x="356" y="120">issue #&lt;c&gt;</text>
+          </g>
+          <g text-anchor="middle" font-size="8.5" opacity=".6">
+            <text x="92" y="136">ciclo completo</text>
+            <text x="224" y="136">ciclo completo</text>
+            <text x="356" y="136">ciclo completo</text>
+          </g>
+          <line x1="150" y1="122" x2="164" y2="122" stroke="currentColor" stroke-width="1.2" marker-end="url(#wc)"/>
+          <line x1="282" y1="122" x2="296" y2="122" stroke="currentColor" stroke-width="1.2" marker-end="url(#wc)"/>
+          <text x="34" y="162" font-size="9.5" opacity=".7">menor nº aberto com blockers fechados · uma issue em voo por vez</text>
+          <text x="34" y="176" font-size="9.5" opacity=".7">após cada merge: atualizar a base e rodar a suite</text>
+
+          <!-- parada de segmento -->
+          <line x1="460" y1="123" x2="484" y2="123" class="s-seal" stroke-width="1.4" marker-end="url(#wcs)"/>
+          <rect x="490" y="88" width="250" height="70" rx="2" fill="none" class="s-seal" stroke-width="1.6"/>
+          <text x="615" y="113" text-anchor="middle" font-weight="600" class="f-seal">PARADA de segmento</text>
+          <text x="615" y="131" text-anchor="middle" font-size="10" class="f-seal" opacity=".85">relatório na issue do loop · aguardar</text>
+          <text x="615" y="146" text-anchor="middle" font-size="10" class="f-seal" opacity=".85">o que parou, por quê, o que falta</text>
+          <line x1="615" y1="158" x2="615" y2="186" stroke="currentColor" stroke-width="1.2" marker-end="url(#wc)"/>
+
+          <!-- frase de lancamento -->
+          <rect x="440" y="190" width="300" height="104" rx="2" fill="none" class="s-seal" stroke-width="1.6"/>
+          <text x="590" y="212" text-anchor="middle" font-weight="600" font-size="11.5" class="f-seal">frase de lançamento do operador</text>
+          <g text-anchor="middle" font-size="9.5" class="f-seal" opacity=".85" font-family="IBM Plex Mono, monospace">
+            <text x="590" y="230">runbook · issue do loop · segmento</text>
+            <text x="590" y="244">gates delegados · &lt;data e hora&gt;</text>
+          </g>
+          <g text-anchor="middle" font-size="9.5" class="f-seal" opacity=".85">
+            <text x="590" y="266">sem a frase completa,</text>
+            <text x="590" y="280">é execução individual, não lote</text>
+          </g>
+
+          <!-- segmento 2 -->
+          <line x1="440" y1="265" x2="427" y2="299" stroke="currentColor" stroke-width="1.2" marker-end="url(#wc)"/>
+          <rect x="20" y="250" width="400" height="110" rx="2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="6 4"/>
+          <text x="34" y="272" font-family="IBM Plex Mono, monospace" font-size="10.5" opacity=".7">segmento 2 · rearmado pela frase</text>
+          <g stroke="currentColor" stroke-width="1.2" fill="none" stroke-dasharray="4 3">
+            <rect x="36" y="290" width="104" height="40" rx="2"/>
+            <rect x="156" y="290" width="104" height="40" rx="2"/>
+            <rect x="276" y="290" width="104" height="40" rx="2"/>
+          </g>
+          <g text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" opacity=".75">
+            <text x="88" y="314">#&lt;d&gt;</text>
+            <text x="208" y="314">#&lt;e&gt;</text>
+            <text x="328" y="314">#&lt;f&gt;</text>
+          </g>
+
+          <text x="20" y="392" font-size="10.5" opacity=".7">a parada não é falha: é fronteira natural de custo e de olho humano</text>
+          <text x="20" y="410" font-size="10.5" opacity=".7">"continua" após uma parada é um novo lançamento, nomeando o próximo segmento</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption><b>O operador lança um segmento por vez.</b> A frase de lançamento nomeia o objeto: runbook, issue do loop, segmento, gates delegados e o que não está delegado, terminando com data e hora preenchidas. Sem a frase completa, é execução individual, não lote: um spec colado sem a frase não é autorização, é cópia do spec.</figcaption>
+  </figure>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th class="num">nº</th><th>condição de parada imediata</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><td>Divergência handoff↔plano (sobe ao operador, nunca absorvida em silêncio).</td></tr>
+        <tr><td class="num">2</td><td>Review FAIL após 2 rodadas de correção na mesma issue: depois disso o problema é de desenho, não de execução.</td></tr>
+        <tr><td class="num">3</td><td>Suite vermelha ou regressão de invariante sem causa imediata óbvia e corrigível na hora.</td></tr>
+        <tr><td class="num">4</td><td>Necessidade de sair do escopo da diretiva (scope creep não se aprova sozinho).</td></tr>
+        <tr><td class="num">5</td><td>Diretiva que exija divergir do plano ou do épico (emenda de plano é ato do operador).</td></tr>
+        <tr><td class="num">6</td><td>Infra persistente (rede, tracker, git) após retries razoáveis.</td></tr>
+        <tr><td class="num">7</td><td>Fim de segmento.</td></tr>
+        <tr><td class="num">8</td><td>Imediatamente antes de iniciar a issue de maior risco (<code>#&lt;d&gt;</code> no template), sempre.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <span class="lbl">Em qualquer parada</span>
+    <p>Comentar o estado na issue do loop: o que parou, por quê, o que falta. E aguardar. As oito condições valem mesmo com gates delegados, e cada uma existe porque o custo de parar cedo é menor que o custo de descobrir tarde.</p>
+  </div>
+</section>
+<!-- ============ 4. ECONOMIA DE GATES ============ -->
+<section>
+  <div class="col">
+    <span class="stage-tag">O que nunca se delega</span>
+    <h2>A economia de gates</h2>
+    <p>Delegar gates é o que torna o lote viável. Delegar os gates errados é o que o torna perigoso. Seis decisões permanecem do operador em qualquer modo:</p>
+  </div>
+
+  <div class="split">
+    <div class="card">
+      <h4>custo pago</h4>
+      <p>Aprovação por nome, com o orçamento explicitado, antes de gastar. Não depois, não implícito, não "aproveitando que já estamos aqui".</p>
+    </div>
+    <div class="card">
+      <h4>tie-break de review</h4>
+      <p>Quando revisor e executor não convergem, quem decide é o operador: nunca o executor que escreveu o código. Dissenso entra no consolidado com refutação evidenciada.</p>
+    </div>
+    <div class="card">
+      <h4>emenda de plano</h4>
+      <p>Emenda de plano ou substituição de etapa: a justificativa documenta, não autoriza.</p>
+    </div>
+    <div class="card">
+      <h4>recorte de escopo</h4>
+      <p>Tirar algo do épico é decisão, não simplificação.</p>
+    </div>
+    <div class="card">
+      <h4>ações irreversíveis</h4>
+      <p>Ações destrutivas ou irreversíveis: merge, force-push, remoção, qualquer coisa visível a terceiros.</p>
+    </div>
+    <div class="card">
+      <h4>"ship it"</h4>
+      <p>No modo individual, sempre do operador. No lote, só dentro do segmento autorizado.</p>
+    </div>
+  </div>
+
+  <div class="note">
+    <span class="lbl">A regra que sustenta todas</span>
+    <p><strong>Aprovação nomeia o objeto.</strong> "Ok" e "pode seguir" autorizam o objeto imediatamente proposto, nada além dele. A frase de lançamento termina com data e hora preenchidas; sem isso, não é lançamento. Um spec colado sem a frase de aprovação não é autorização: é cópia do spec.</p>
+  </div>
+</section>
+
+<!-- ============ 5. OS TRES VERIFICADORES ============ -->
+<section>
+  <div class="col">
+    <span class="stage-tag">Verificação</span>
+    <h2>Os três verificadores</h2>
+    <p>Três verificadores independentes, cada um pegando o que os outros deixam passar. Configure o CI cedo: sem ele, o revisor adversarial é o único gate mecânico do loop inteiro, e ele é caro e falível. No caso de origem: suite de 189 para 313 checagens, golden byte a byte verde em todos os merges, e uma única checagem existente editada no épico inteiro, declarada na diretiva, justificada no PR e registrada no handoff, em três lugares.</p>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th class="mono">verificador</th><th>o que pega</th><th>custo</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">suite + golden</td><td>Regressão mecânica, quebra de invariante</td><td>Grátis, roda sempre</td></tr>
+        <tr><td class="mono">CI</td><td>O que a sessão esqueceu de rodar, ou rodou em ambiente sujo</td><td>Grátis após configurar</td></tr>
+        <tr><td class="mono">review adversarial</td><td>O que teste nenhum vê: desenho errado, promessa falsa na documentação, escopo estourado, handoff fraco</td><td>Caro, obrigatório</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note blind">
+    <span class="lbl">Evidência do caso de origem</span>
+    <p>O review adversarial produziu cerca de 30 bloqueios legítimos em 15 issues, incluindo classes que teste nenhum pega: avaliadores que eram também autores do material avaliado, quebrando o cegamento que o desenho exigia; identificadores reais vazando em um caminho que deveria ser cego; escrita não idempotente onde o contrato exigia imutabilidade de registro; drift de descrição em um componente que a issue nem tocava, pego porque o revisor conferiu o diff inteiro; e documentação afirmando garantia que o código não fazia.</p>
+    <p>Sob estresse, o formato segurou: duas sessões de revisor morreram por timeout e foram substituídas por outras independentes, porque a independência é a propriedade que dá valor ao review; e o teto de 2 rodadas, acionado uma vez, parou o loop e subiu ao operador, que decidiu em uma mensagem.</p>
+  </div>
+</section>
+<!-- ============ 6. INSTRUMENTOS DE DECISAO ============ -->
+<section>
+  <div class="col">
+    <span class="stage-tag">Fronteira</span>
+    <h2>Como a decisão sai do operador</h2>
+    <p>Três instrumentos para extrair decisões do operador sem desperdiçar a atenção dele, escolhidos pelo tamanho da fronteira.</p>
+  </div>
+
+  <div class="split">
+    <div class="card">
+      <h4>uma questão por vez</h4>
+      <p>O formato padrão para fronteiras pequenas: uma questão, o contexto que a torna necessária, e uma recomendação explícita com o porquê. O operador responde ou diz "aceito a recomendação". Aplica-se quando as questões são poucas e a resposta de uma muda a seguinte.</p>
+    </div>
+    <div class="card">
+      <h4>fronteira em blocos</h4>
+      <p>Para 10 questões ou mais, uma por vez é desperdício. Bloco A: questões onde a análise já converge, validadas em bloco, com vetos por número. Bloco B: decisões genuinamente do operador, uma linha cada, com recomendação. No caso real, 26 questões viraram 11 de bloco A mais 5 de bloco B, e o operador resolveu tudo em duas mensagens; sem o corte, seriam 26 rodadas.</p>
+    </div>
+    <div class="card">
+      <h4>julgamento cego</h4>
+      <p>Quando duas alternativas empatam na análise: apresentadas sem autoria e em ordem sorteada, o operador escolhe, e o veredito é gravado e endereçado ao material original. Quebra empates que a análise não quebra, e acumula calibração: com o tempo, sabe-se o quanto a análise concorda com quem decide de verdade.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 7. OS SEIS TEMPLATES ============ -->
+<section>
+  <div class="col">
+    <span class="stage-tag">Instanciação</span>
+    <h2>Os seis templates</h2>
+    <p>Instanciar o framework em um repo novo é copiar seis templates e preenchê-los na ordem. A primeira issue roda inteira no modo individual, sem delegar nada: é onde se descobre o que o contrato do repo esqueceu. O runbook do lote só entra depois de 2 ou 3 issues estáveis; antes de fechar a fase, o bootstrap frio é testado de propósito, em sessão limpa. O framework é auto-hospedável: use-o para evoluir ele mesmo.</p>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th class="mono">template</th><th>o que produz</th><th>quando se usa</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="mono">templates/AGENTS.template.md</td>
+          <td>O contrato do repo em sete seções: Sempre, Constraints da fase, Rotina de execução, Bootstrap de sessão fria, Handoff obrigatório, Aplicabilidade por issue, Mapa.</td>
+          <td>Copiado e preenchido antes da primeira issue: é o que permite ao operador dizer apenas <code>execute a #N</code>.</td>
+        </tr>
+        <tr>
+          <td class="mono">templates/epico.md</td>
+          <td>O épico: grafo de dependências e checklist de fechamento. Nenhuma issue nasce sem blockers declarados e critério de verificação.</td>
+          <td>Ao abrir as issues, a partir do plano aprovado; o grafo vive no corpo do épico e é a fonte da verdade sobre o que pode começar.</td>
+        </tr>
+        <tr>
+          <td class="mono">templates/diretiva.md</td>
+          <td>O contrato de execução de uma issue, em formato fixo de 7 seções, postado como comentário no tracker.</td>
+          <td>Antes de implementar; para em aprovação nomeada. No lote, o loop só aprova diretiva fiel ao plano.</td>
+        </tr>
+        <tr>
+          <td class="mono">templates/handoff.md</td>
+          <td>O handoff que a issue deixa para a próxima: no máximo 35 linhas, cinco seções, viajando dentro do PR.</td>
+          <td>Todo PR de código; a próxima issue lê antes do plano. Ausente ou incompleto é finding BLOCKING no review.</td>
+        </tr>
+        <tr>
+          <td class="mono">templates/runbook-loop.md</td>
+          <td>O runbook do modo em lote: segmentos, gates delegados, as 8 condições de parada, relatórios por issue e por segmento.</td>
+          <td>Depois de 2 ou 3 issues estáveis no modo individual; um segmento lançado por vez.</td>
+        </tr>
+        <tr>
+          <td class="mono">templates/frases-do-operador.md</td>
+          <td>Frases prontas do operador: lançamento de segmento e gates.</td>
+          <td>Para autorizar o lote nomeando runbook, issue do loop, segmento, gates delegados e data e hora.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 8. LIMITES ============ -->
+<section>
+  <div class="col">
+    <span class="stage-tag">Limites declarados</span>
+    <h2>O que este desenho não faz</h2>
+    <ul>
+      <li><strong>Não substitui o julgamento do operador: o concentra.</strong> O framework move a atenção humana para os pontos caros: custo, tie-break, emenda, escopo, irreversibilidade, merge. Quem assina continua sendo uma pessoa.</li>
+      <li><strong>O processo tem custo por unidade.</strong> Diretiva, review e handoff por issue não se pagam em tarefa única, exploração sem destino definido, ou trabalho onde o custo do processo excede o custo da unidade em si.</li>
+      <li><strong>A contabilidade de custo ainda é feita à mão.</strong> No caso de origem, o sistema subcontava cerca de metade do consumo, porque um dos estágios não registrava uso; o orçamento foi somado à mão, no documento da sessão. Funcionou, mas o número que autoriza gasto não deveria depender de alguém lembrar de somar.</li>
+      <li><strong>Processo caro pode morrer sem deixar artefato.</strong> Duas vezes, uma rodada paga caiu pelo teto de tempo do harness antes de gravar qualquer coisa: nem registro, nem contabilidade. Processos longos precisam rodar fora do teto do comando.</li>
+      <li><strong>Vem de um caso único.</strong> 15 issues, um repo, um operador, três dias. O que é framework e o que era particularidade daquele projeto ainda não está separado.</li>
+      <li><strong>Certos trabalhos o agente não conclui sozinho.</strong> Artefato fora do repo tem como gate uma sessão real de uso pelo operador: a issue fica aberta até isso acontecer. E isso é correto, pois é o único teste que importa para esse tipo de trabalho.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <div class="col">
+    <p>Mapa gerado a partir de <code>playbooks/workloop.md</code> e <code>docs/caso-llm-council.md</code>, versão 0.1, 26 de agosto de 2026.</p>
+  </div>
+</footer>
+</div>
