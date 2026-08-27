@@ -1,0 +1,441 @@
+<title>Anatomia do AgentRoom</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root{
+  --ground:#f1f3f6; --surface:#ffffff; --surface-2:#e7eaef; --sunk:#dfe3ea;
+  --ink:#191d25; --ink-2:#495264; --ink-3:#727c8f; --rule:#d1d6de;
+  --seal:#8f2d3f; --blind:#3c5c88; --ok:#2f6b4f; --warn:#87621a;
+  --seal-wash:#f6e9eb; --blind-wash:#e8eef7;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#12151b; --surface:#1a1e26; --surface-2:#222731; --sunk:#161a21;
+    --ink:#e7e9ee; --ink-2:#a9b1c0; --ink-3:#7b8496; --rule:#2c3240;
+    --seal:#d97e8e; --blind:#83a7da; --ok:#6cbe94; --warn:#d2a552;
+    --seal-wash:#2a1a1f; --blind-wash:#18202e;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#12151b; --surface:#1a1e26; --surface-2:#222731; --sunk:#161a21;
+  --ink:#e7e9ee; --ink-2:#a9b1c0; --ink-3:#7b8496; --rule:#2c3240;
+  --seal:#d97e8e; --blind:#83a7da; --ok:#6cbe94; --warn:#d2a552;
+  --seal-wash:#2a1a1f; --blind-wash:#18202e;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1060px; margin:0 auto; padding:0 24px 96px}
+.col{max-width:68ch}
+
+/* ---------- cabeçalho ---------- */
+header{padding:72px 0 48px; border-bottom:1px solid var(--rule); margin-bottom:56px}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--seal); margin:0 0 20px;
+}
+h1{
+  font-family:Spectral,Georgia,serif; font-weight:600; font-size:clamp(38px,6vw,60px);
+  line-height:1.06; letter-spacing:-.015em; margin:0 0 22px; text-wrap:balance;
+}
+.lede{font-size:19px; line-height:1.6; color:var(--ink-2); margin:0; max-width:60ch}
+.lede em{font-style:normal; color:var(--ink); border-bottom:2px solid var(--seal); padding-bottom:1px}
+
+.facts{
+  display:flex; flex-wrap:wrap; gap:0; margin-top:40px;
+  border:1px solid var(--rule); border-radius:3px; overflow:hidden; background:var(--surface);
+}
+.fact{flex:1 1 150px; padding:16px 18px; border-right:1px solid var(--rule)}
+.fact:last-child{border-right:none}
+.fact dt{
+  font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--ink-3); margin:0 0 6px;
+}
+.fact dd{margin:0; font-size:15px; font-weight:500; font-variant-numeric:tabular-nums}
+
+/* ---------- seções ---------- */
+section{margin-bottom:72px}
+h2{
+  font-family:Spectral,Georgia,serif; font-weight:600; font-size:30px; line-height:1.2;
+  margin:0 0 8px; letter-spacing:-.01em; text-wrap:balance;
+}
+h3{font-size:17px; font-weight:600; margin:36px 0 10px; letter-spacing:-.005em}
+.stage-tag{
+  display:inline-block; font-family:"IBM Plex Mono",monospace; font-size:12px;
+  letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3);
+  border:1px solid var(--rule); border-radius:2px; padding:3px 9px; margin-bottom:14px;
+}
+p{margin:0 0 16px}
+a{color:var(--seal)}
+strong{font-weight:600}
+code{
+  font-family:"IBM Plex Mono",monospace; font-size:.88em; background:var(--surface-2);
+  padding:1px 5px; border-radius:2px; color:var(--ink);
+}
+
+/* ---------- figuras ---------- */
+figure{margin:32px 0; padding:0}
+.figbox{
+  background:var(--surface); border:1px solid var(--rule); border-radius:3px;
+  padding:24px; overflow-x:auto;
+}
+figure svg{display:block; width:100%; min-width:520px; height:auto; color:var(--ink)}
+/* texto em SVG nao herda color: sem fill explicito o padrao e preto, invisivel no tema
+   escuro. currentColor resolve pelo --ink; as classes de accent abaixo tem prioridade. */
+figure svg text{fill:currentColor}
+/* accents dentro do SVG resolvem pelos tokens: hex literal quebraria no tema escuro */
+figure svg .s-seal{stroke:var(--seal)}
+figure svg .f-seal{fill:var(--seal)}
+figure svg .s-blind{stroke:var(--blind)}
+figure svg .f-blind{fill:var(--blind)}
+figcaption{
+  margin-top:12px; font-size:14px; line-height:1.55; color:var(--ink-2); max-width:70ch;
+}
+figcaption b{color:var(--ink); font-weight:600}
+
+/* ---------- tabelas ---------- */
+.tbl-wrap{overflow-x:auto; margin:24px 0}
+table{
+  width:100%; border-collapse:collapse; font-size:14px; background:var(--surface);
+  border:1px solid var(--rule); border-radius:3px;
+}
+th,td{padding:9px 14px; text-align:left; border-bottom:1px solid var(--rule)}
+th{
+  font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--ink-3); font-weight:500; background:var(--sunk);
+}
+tbody tr:last-child td{border-bottom:none}
+td.num{font-variant-numeric:tabular-nums; font-family:"IBM Plex Mono",monospace}
+td.mono,th.mono{font-family:"IBM Plex Mono",monospace; font-size:13px}
+
+/* ---------- notas ---------- */
+.note{
+  border-left:3px solid var(--seal); background:var(--seal-wash);
+  padding:16px 20px; margin:24px 0; border-radius:0 3px 3px 0;
+}
+.note.blind{border-left-color:var(--blind); background:var(--blind-wash)}
+.note p:last-child{margin-bottom:0}
+.note .lbl{
+  font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.11em;
+  text-transform:uppercase; color:var(--seal); display:block; margin-bottom:6px;
+}
+.note.blind .lbl{color:var(--blind)}
+
+ul{margin:0 0 16px; padding-left:22px}
+li{margin-bottom:8px}
+li::marker{color:var(--ink-3)}
+
+.split{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; margin:24px 0}
+.card{background:var(--surface); border:1px solid var(--rule); border-radius:3px; padding:18px 20px}
+.card h4{
+  margin:0 0 8px; font-size:14px; font-family:"IBM Plex Mono",monospace;
+  font-weight:500; letter-spacing:.04em;
+}
+.card p{font-size:14.5px; color:var(--ink-2); margin:0}
+
+footer{border-top:1px solid var(--rule); padding-top:24px; color:var(--ink-3); font-size:13.5px}
+</style>
+
+<div class="wrap">
+<header>
+  <p class="eyebrow">Mapa de arquitetura · arXiv:2608.23740v1</p>
+  <h1>Anatomia do AgentRoom</h1>
+  <p class="lede">A proposta do paper para codificação multiagente concorrente: vários agentes escrevendo juntos no mesmo filesystem sem virar zona de guerra. A arquitetura cabe em um único objeto de runtime, um quarto compartilhado: workspace fundido por CRDT mais uma sala com semântica explícita de estado exposta como ferramentas MCP. O ganho vem <em>da coordenação explícita, não do paralelismo nem do CRDT em si</em>.</p>
+
+  <dl class="facts">
+    <div class="fact"><dt>Componentes acoplados</dt><dd>3</dd></div>
+    <div class="fact"><dt>Ferramentas MCP</dt><dd>5</dd></div>
+    <div class="fact"><dt>Passos do protocolo</dt><dd>6</dd></div>
+    <div class="fact"><dt>Ponto ótimo N</dt><dd>2</dd></div>
+    <div class="fact"><dt>Vantagem vs parallel-merge</dt><dd>+0.213 · p=0.003</dd></div>
+  </dl>
+</header>
+
+<!-- ============ 1. A PRIMITIVA ============ -->
+<section>
+  <div class="col">
+    <span class="stage-tag">A primitiva única</span>
+    <h2>Um quarto, não um pipeline</h2>
+    <p>A maioria dos sistemas multiagente passa bastão: design, depois implementação, depois review, cada agente esperando o anterior terminar. O AgentRoom troca isso por execução simultânea: N agentes lançados juntos, todos escrevendo no mesmo workspace W, onde qualquer arquivo escrito por um é imediatamente visível aos demais. Três peças foram desenhadas juntas e o paper não as ablate isoladamente: o substrato, os agentes e a interface de coordenação.</p>
+    <p>O substrato é o pycrdt (o port em Rust do Y.js): escritas concorrentes fundidas ao nível de caractere, com convergência forte em cerca de 2 segundos e uma checagem de sanidade de balanceamento de chaves e parênteses como rede básica. Por cima dele, cinco ferramentas MCP dão aos agentes os movimentos de coordenação. A distinção central do desenho: posse de arquivo é aplicada na camada de gerenciamento de estado, que retorna erro sistêmico, em vez de confiar na inteligência do agente para interpretar texto livre.</p>
+  </div>
+
+  <figure>
+    <div class="figbox">
+      <svg viewBox="0 0 760 368" role="img" aria-label="Arquitetura do AgentRoom: três agentes com status de peer exposto conectados ao workspace compartilhado W, fundido por CRDT com merge caractere-a-caractere em até 2 segundos e checagem de sanidade de balanceamento; abaixo, o servidor MCP com as ferramentas claim, release, state, broadcast e read; ao lado do servidor, o log Lt append-only em JSONL. Quem escreve sem reivindicar mantém os bytes pela consistência eventual forte e a violação fica registrada no log.">
+        <defs>
+          <marker id="wf1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+        <g font-family="IBM Plex Sans, sans-serif" font-size="12.5">
+
+          <!-- agentes -->
+          <rect x="95" y="18" width="150" height="54" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="170" y="38" text-anchor="middle" font-weight="500">agente α</text>
+          <text x="170" y="56" text-anchor="middle" font-size="9.5" opacity=".7" font-family="IBM Plex Mono, monospace">status próprio exposto</text>
+          <rect x="305" y="18" width="150" height="54" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="380" y="38" text-anchor="middle" font-weight="500">agente β</text>
+          <text x="380" y="56" text-anchor="middle" font-size="9.5" opacity=".7" font-family="IBM Plex Mono, monospace">status próprio exposto</text>
+          <rect x="515" y="18" width="150" height="54" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="590" y="38" text-anchor="middle" font-weight="500">agente γ</text>
+          <text x="590" y="56" text-anchor="middle" font-size="9.5" opacity=".7" font-family="IBM Plex Mono, monospace">status próprio exposto</text>
+
+          <!-- conexões agentes -> substrato -->
+          <line x1="170" y1="72" x2="170" y2="116" stroke="currentColor" stroke-width="1.2" marker-end="url(#wf1)"/>
+          <line x1="380" y1="72" x2="380" y2="116" stroke="currentColor" stroke-width="1.2" marker-end="url(#wf1)"/>
+          <line x1="590" y1="72" x2="590" y2="116" stroke="currentColor" stroke-width="1.2" marker-end="url(#wf1)"/>
+
+          <!-- substrato -->
+          <rect x="115" y="120" width="530" height="78" rx="2" fill="none" class="s-blind" stroke-width="1.6"/>
+          <text x="380" y="146" text-anchor="middle" font-weight="600" font-size="13" class="f-blind">workspace compartilhado W</text>
+          <text x="380" y="166" text-anchor="middle" font-size="10" class="f-blind" opacity=".85" font-family="IBM Plex Mono, monospace">fundido por CRDT (pycrdt/Yrs) · merge caractere-a-caractere · ≤ 2 s</text>
+          <text x="380" y="183" text-anchor="middle" font-size="10" class="f-blind" opacity=".7">checagem de sanidade de balanceamento de chaves e parênteses após o merge</text>
+
+          <!-- substrato -> servidor MCP -->
+          <line x1="380" y1="198" x2="380" y2="224" stroke="currentColor" stroke-width="1.2" marker-end="url(#wf1)"/>
+
+          <!-- servidor MCP -->
+          <rect x="175" y="228" width="420" height="64" rx="2" fill="none" class="s-seal" stroke-width="1.6"/>
+          <text x="385" y="252" text-anchor="middle" font-weight="600" font-size="13" class="f-seal">servidor MCP · semântica de estado</text>
+          <text x="385" y="274" text-anchor="middle" font-size="10.5" class="f-seal" opacity=".85" font-family="IBM Plex Mono, monospace">claim · release · state · broadcast · read</text>
+
+          <!-- log -->
+          <line x1="597" y1="260" x2="626" y2="260" stroke="currentColor" stroke-width="1" opacity=".5"/>
+          <rect x="628" y="232" width="112" height="56" rx="2" fill="none" class="s-blind" stroke-width="1.3" stroke-dasharray="4 3"/>
+          <text x="684" y="255" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" class="f-blind">log Lt</text>
+          <text x="684" y="272" text-anchor="middle" font-size="9" class="f-blind" opacity=".8">append-only JSONL</text>
+
+          <!-- notas de rodapé -->
+          <text x="20" y="330" font-size="11" opacity=".75">todos executam simultaneamente em W: o que um escreve, os outros veêm imediatamente; nenhuma fase espera a anterior</text>
+          <text x="20" y="350" font-size="11" class="f-seal" opacity=".9">escrever sem reivindicar não descarta bytes: a SEC preserva o conteúdo e a violação fica exposta no log</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption><b>Os agentes conversam pela sala, não pelo diff.</b> O claim é um mapa atômico de agentes para arquivos que responde OK ou CONFLICT: a exclusão mútua mora na camada de estado, não na boa vontade de quem lê mensagem de texto. É esse o corte que separou as condições no experimento: o mesmo par de recursos, com e sem esse canal estruturado, produz resultados estatisticamente distintos.</figcaption>
+  </figure>
+
+  <div class="note blind">
+    <span class="lbl">De onde vem o lock</span>
+    <p><code>room_claim(path)</code> segue o lock consultivo estilo Chubby: exclusão mútua válida sob cooperação, aplicada na camada de prompt e não no kernel. O direito de um terceiro corrigir o arquivo de um colega (o padrão de correção cruzada observado no paper) sobrevive porque o lock não bloqueia gravação: ele declara intenção e a sala audita. Quando um agente estagna, o colega entra, corrige, e a entrada fica registrada.</p>
+  </div>
+</section>
+
+<!-- ============ 2. AS CINCO FERRAMENTAS ============ -->
+<section>
+  <div class="col">
+    <span class="stage-tag">Superfície de API</span>
+    <h2>As cinco ferramentas</h2>
+    <p>O contrato inteiro do quarto são cinco chamadas. Cada uma devolve um resultado determinístico da camada de estado: a coordenação não depende de o agente entender prosa, depende de resposta do sistema.</p>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th class="mono">ferramenta</th><th>assinatura efetiva</th><th>o que garante</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">room_claim</td><td>mapa atômico A × F → {OK, CONFLICT}</td><td>Posse exclusiva consultiva do path; a sala recusa claim já segurado por outro agente</td></tr>
+        <tr><td class="mono">room_release</td><td>descarte voluntário de claim</td><td>Devolve o path ao pool da sala</td></tr>
+        <tr><td class="mono">room_state</td><td>retorna (claims ativos C<sub>t</sub>, log recente L[t−τ,t])</td><td>O agente vê os pares e suas posições antes de mexer</td></tr>
+        <tr><td class="mono">room_broadcast</td><td>append em L<sub>t</sub></td><td>Mensagem durável, ordem causality-preserving, legível por todos</td></tr>
+        <tr><td class="mono">room_read</td><td>leitura de L<sub>t</sub></td><td>Histórico auditável de intenções e conclusões</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <span class="lbl">Por que o claim existe</span>
+    <p>No ponto de operação medido (N=2, cerca de 5 arquivos candidatos por rodada), a probabilidade de dois agentes mirarem o mesmo arquivo é aproximadamente 0.20. E a fusão da SEC opera em bytes, não em intenções: duas assinaturas de função incompatíveis inseridas no mesmo offset sobrevivem ambas ao merge e quebram a compilação mais tarde. O claim leva a taxa de colisão a zero com custo O(1) por edição.</p>
+  </div>
+
+  <div class="note">
+    <span class="lbl">Estado estruturado vence texto livre</span>
+    <p>No contraste direto de backends, quando dois agentes anunciavam posses de arquivo como texto livre em chat MCP, ninguém detectava o conflito: 1 das 2 rodadas foi catastrófica (score 0.088, zero testes passando). Com o claim estruturado, o próprio <code>room_claim()</code> retorna o erro de conflito: 7 de 7 rodadas bem-sucedidas. Mesmo modelo, mesma tarefa, canal diferente.</p>
+  </div>
+</section>
+
+<!-- ============ 3. O PROTOCOLO ============ -->
+<section>
+  <div class="col">
+    <span class="stage-tag">Colaboração</span>
+    <h2>O protocolo de cooperação</h2>
+    <p>Todo agente recebe um fluxo consultivo de seis passos. Não há papel pré-assinado nem passe de bastão entre fases: todos são implementadores simultâneos da mesma árvore de arquivos, e a sala existe para que a simultaneidade não vire colisão. As duas regras permanentes: a sala recusa claim de arquivo já segurado por outro agente, e o prompt manda ler os arquivos existentes antes de escrever, importando código dos colegas em vez de duplicar.</p>
+  </div>
+
+  <figure>
+    <div class="figbox">
+      <svg viewBox="0 0 760 444" role="img" aria-label="Fluxo consultivo do protocolo em seis passos: ler o estado da sala com room_state antes de escrever; reivindicar cada arquivo planejado com room_claim; em caso de conflito, pois outro agente segura o arquivo, revisar a divisão e escolher outro arquivo, voltando ao estado da sala; escrever nos arquivos reivindicados lendo o que os colegas já escreveram; sondar atualizações dos pares entre subtarefas, o que realimenta a escrita; e transmitir a conclusão com room_broadcast.">
+        <defs>
+          <marker id="wm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+          <marker id="wms" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" class="f-seal"/>
+          </marker>
+        </defs>
+        <g font-family="IBM Plex Sans, sans-serif" font-size="12.5">
+
+          <!-- passo 1 -->
+          <rect x="40" y="16" width="290" height="48" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="185" y="35" text-anchor="middle" font-weight="500">ler o estado da sala</text>
+          <text x="185" y="53" text-anchor="middle" font-size="9.5" opacity=".7" font-family="IBM Plex Mono, monospace">room_state() antes de escrever</text>
+          <line x1="185" y1="64" x2="185" y2="86" stroke="currentColor" stroke-width="1.2" marker-end="url(#wm)"/>
+
+          <!-- passo 2 -->
+          <rect x="40" y="88" width="290" height="48" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="185" y="107" text-anchor="middle" font-weight="500">reivindicar cada arquivo planejado</text>
+          <text x="185" y="125" text-anchor="middle" font-size="9.5" opacity=".7" font-family="IBM Plex Mono, monospace">room_claim(path) → OK · CONFLICT</text>
+          <line x1="185" y1="136" x2="185" y2="158" stroke="currentColor" stroke-width="1.2" marker-end="url(#wm)"/>
+
+          <!-- passo 3 -->
+          <rect x="40" y="160" width="290" height="48" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="185" y="179" text-anchor="middle" font-weight="500">escrever nos arquivos reivindicados</text>
+          <text x="185" y="197" text-anchor="middle" font-size="9.5" opacity=".7">importando o que os colegas já escreveram</text>
+          <line x1="185" y1="208" x2="185" y2="230" stroke="currentColor" stroke-width="1.2" marker-end="url(#wm)"/>
+
+          <!-- passo 4 -->
+          <rect x="40" y="232" width="290" height="48" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="185" y="251" text-anchor="middle" font-weight="500">sondar entre subtarefas</text>
+          <text x="185" y="269" text-anchor="middle" font-size="9.5" opacity=".7" font-family="IBM Plex Mono, monospace">poll: capturar atualizações dos pares</text>
+          <line x1="185" y1="280" x2="185" y2="302" stroke="currentColor" stroke-width="1.2" marker-end="url(#wm)"/>
+
+          <!-- passo 5 -->
+          <rect x="40" y="304" width="290" height="48" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="185" y="323" text-anchor="middle" font-weight="500">transmitir a conclusão</text>
+          <text x="185" y="341" text-anchor="middle" font-size="9.5" opacity=".7" font-family="IBM Plex Mono, monospace">room_broadcast: terminei meu escopo</text>
+
+          <!-- ramo de conflito: claim negado volta ao passo 1 -->
+          <path d="M330,112 L395,112 L395,40 L336,40" fill="none" class="s-seal" stroke-width="1.4" marker-end="url(#wms)"/>
+          <text x="405" y="74" font-size="11" font-weight="600" class="f-seal">CONFLICT</text>
+          <text x="405" y="92" font-size="10" class="f-seal" opacity=".85">outro agente segura o arquivo:</text>
+          <text x="405" y="106" font-size="10" class="f-seal" opacity=".85">escolher outro e voltar ao estado da sala</text>
+
+          <!-- realimentação de poll -->
+          <path d="M330,256 L360,256 L360,208 L336,208" fill="none" stroke="currentColor" stroke-width="1.2" marker-end="url(#wm)"/>
+          <text x="368" y="240" font-size="9.5" opacity=".75">atualizações dos pares</text>
+          <text x="368" y="254" font-size="9.5" opacity=".75">realimentam a escrita</text>
+
+          <!-- notas de rodapé -->
+          <text x="40" y="392" font-size="11" opacity=".75">advisory no nível do prompt: cooperação, não kernel; sem papel pré-assinado nem handoff orquestrado entre fases</text>
+          <text x="40" y="412" font-size="11" class="f-blind">desvio documentado: perante colega estagnado, o agente invade o arquivo e corrige; a SEC preserva os bytes e o log registra</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption><b>O conflito não é interpretado, é retornado.</b> Quando o claim bate, a sala devolve CONFLICT sistemicamente e o agente revisa a partilha; o desvio não vai para o vazio, vai para o log. Apesar da adesão imperfeita esperada de protocolos consultivos, a condição completa bateu todas as alternativas sem coordenação: o canal estruturado funciona precisamente porque supõe cooperadores imperfeitos.</figcaption>
+  </figure>
+</section>
+
+<!-- ============ 4. A EVIDÊNCIA ============ -->
+<section>
+  <div class="col">
+    <span class="stage-tag">Evidência</span>
+    <h2>Coordenação carrega o ganho</h2>
+    <p>O resultado central é uma ordenação, obtida em compute equivalente: mesma tarefa (o ledger financeiro T4, ≥15 arquivos), mesmo modelo (Sonnet 4.6), mesmo CLI, mesmo budget de wall clock, mudando apenas como os dois agentes são combinados. Seis condições formaram uma escalera monotônica:</p>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>condição</th><th class="num">média (0–1)</th><th class="num">n</th><th class="num">σ</th><th>leitura</th></tr></thead>
+      <tbody>
+        <tr><td>Pipeline sequencial estilo ChatDev (3 fases)</td><td class="num">0.333</td><td class="num">6</td><td class="num">0.197</td><td>Parada amplificada em cada fronteira de fase</td></tr>
+        <tr><td>Parallel-merge (2 independentes + união)</td><td class="num">0.456</td><td class="num">12</td><td class="num">0.178</td><td>Concorrência sem coordenação rende menos que 1 agente</td></tr>
+        <tr><td>Solo (1 agente)</td><td class="num">0.544</td><td class="num">32</td><td class="num">0.222</td><td>Linha de base</td></tr>
+        <tr><td>Somente compartilhado (2, sem MCP)</td><td class="num">0.575</td><td class="num">11</td><td class="num">0.155</td><td>Substrato sem sinalização recupera parte</td></tr>
+        <tr><td>+prompt colaborativo, sem MCP</td><td class="num">0.588</td><td class="num">7</td><td class="num">0.188</td><td>Prompt sozinho é scaffolding, não canal</td></tr>
+        <tr><td><strong>AgentRoom completo</strong> (CRDT + MCP + prompt)</td><td class="num"><strong>0.669</strong></td><td class="num">14</td><td class="num">0.140</td><td>O maior salto observado está nas ferramentas</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="col">
+    <p>O contraste mais informativo isola exatamente a coordenação: parallel-merge e AgentRoom rodam os mesmos dois Sonnets pelo mesmo tempo, mas só o segundo tem sala. A diferença é +0.213 de média (Welch t=3.35, p=0.003). Na comparação com o pipeline sequencial, mesmo modelo e mesmo CLI, p=0.006. Parallel-merge rendeu menos que o solo porque, sem coordenação, o <code>server.ts</code> do segundo agente sobrescreve silenciosamente o do primeiro: a concorrência ingênua amplifica o stub-and-exit em vez de mediá-lo.</p>
+    <p>E há um segundo resultado, anterior a qualquer rubrica: dois agentes em sala suprimem o modo de falha do agente solitário que desiste com um esqueleto de um arquivo. Agrupados 12 estratos de modelo × tarefa, os odds de abandono do solo são 13.7 vezes os da sala (IC 95% [3.9, 48], p &lt; 10⁻⁵). No T4, σ caiu de 0.23 para 0.14 no Sonnet, de 0.25 para 0.17 no Haiku, de 0.27 para 0.15 no Codex: variação rodada a rodada contrai 30 a 45%, replicado nos três modelos CLI-estáveis.</p>
+  </div>
+
+  <div class="note">
+    <span class="lbl">Leitura honesta das células</span>
+    <p>Nesses tamanhos amostrais, o intervalo da fatia atribuída só às ferramentas MCP (de 0.588 até 0.669) atravessa zero. O que o paper reclama como sólido é a ordenação qualitativa: compartilhado só &lt; prompt só &lt; pacote completo. E o composite do LLM-judge mede o que mede: cobertura de especificação, sinais de correção, qualidade de código e rigor de teste, validado contra scorers regex e AST que preservam a mesma ordem.</p>
+  </div>
+</section>
+
+<!-- ============ 5. ESCALAMENTO ============ -->
+<section>
+  <div class="col">
+    <span class="stage-tag">Fronteira operacional</span>
+    <h2>Até onde escala, e até onde não</h2>
+  </div>
+
+  <div class="split">
+    <div class="card">
+      <h4>N=2 é o ponto ótimo</h4>
+      <p>Médias em x1/x2/x3/x4: 0.544, 0.669, 0.553, 0.489. Depois de dois, paga-se computação linear por qualidade decrescente. O número demonstrado de operação é dois; o anúncio de marketing diz "multiagente", o dado diz "dupla".</p>
+    </div>
+    <div class="card">
+      <h4>Broadcast satura o canal</h4>
+      <p>O tráfego de mensagens cresce superlinearmente acima de x3, coerente com um canal único de difusão. Saturação é hipótese declarada em aberto: não houve ablação controlada de multicanal, e é o experimento que separaria declínio de canal de declínio intrínseco.</p>
+    </div>
+    <div class="card">
+      <h4>Heterogêneo não é almoço grátis</h4>
+      <p>A melhor célula pareada testada foi Sonnet+Codex (0.721, n=3); Sonnet+Gemini ficou em 0.542 (n=3). A sala não apaga diferença de capacidade: parceiro fraco contribui pouco mesmo com o primeiro agente fixado.</p>
+    </div>
+    <div class="card">
+      <h4>Custo por Pareto no meio da faixa</h4>
+      <p>Duplas Haiku alcançaram 0.662 contra 0.544 de um Sonnet solo, por aproximadamente metade do dólar (Welch p=0.036). Sugestivo, com viés exposto assumido: duplas de modelos menores podem ser competitivas nessa banda de dificuldade.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6. LIMITES ============ -->
+<section>
+  <div class="col">
+    <span class="stage-tag">Limites declarados</span>
+    <h2>O que este desenho não faz</h2>
+    <ul>
+      <li><strong>Funde bytes, não intenções.</strong> A SEC elimina perda de dados sob edição concorrente, mas duas mudanças semanticamente incompatíveis sobrevivem juntas ao merge e quebram compilação ou teste adiante. O claim elimina o cenário, não a propriedade do substrato.</li>
+      <li><strong>Tarefas greenfield apenas.</strong> Quatro tarefas Express.js/TypeScript construídas do zero, avaliadas por LLM-judge; os checks fora de domínio (Rust+axum, 10 projetos Python do DevBench) são pontuais, fracamente povoados e preservam direção, não magnitude. Nenhum caso de trabalho incremental sobre repositório existente.</li>
+      <li><strong>Correção julgada, não verificada por oráculo.</strong> As suítes vitest são escritas pelos próprios agentes e só contadas descritivamente; o composite é cross-validado contra regex e AST, mas não há suíte held-out.</li>
+      <li><strong>Nenhum humano no circuito.</strong> Não há gate, aprovação nomeada, auditoria de custo nem histórico versionado de decisão: tudo acontece dentro de budgets de 300 a 900 segundos. A arquitetura otimiza throughput autônomo, não governança.</li>
+      <li><strong>Fragilidade de deployment é real.</strong> Codex-mini continua instável sob MCP concorrente; Gemini 3 só voltou a funcionar com uma correção de uma linha (framing LSP → NDJSON no stdio). CLIs com versões pinadas; sem seeds, sem reprodutibilidade bit a bit, variância reportada como σ.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 7. CONVERSA COM O WORKLOOP ============ -->
+<section>
+  <div class="col">
+    <span class="stage-tag">Tradução local</span>
+    <h2>Onde isto conversa com o workloop</h2>
+    <p>O AgentRoom coordena agentes simultâneos dentro de uma tarefa; o workloop encadeia tarefas sequencialmente sob gates humanos. Escalas diferentes, mas quatro lições atravessam, cada uma delimitada:</p>
+  </div>
+
+  <div class="split">
+    <div class="card">
+      <h4>claim mecânico onde hoje é convenção</h4>
+      <p>O pick de issue no modo lote é conferido no tracker, mas nada impede duas sessões de pegarem a mesma issue. O paper mostra texto livre falhando catastrficamente e estado estruturado resolvendo: idempotência mecânica (assign + label em uma operação atômica) como pré-condição dura do pick.</p>
+    </div>
+    <div class="card">
+      <h4>teto de dois em voo</h4>
+      <p>Se um dia o grafo permitir, no máximo 2 issues simultâneas, restritas a subárvores sem overlap de arquivos, mesma classe de modelo, gates de segmento intactos. Acima de dois, o paper mede declínio de qualidade e saturação de canal.</p>
+    </div>
+    <div class="card">
+      <h4>intenção antes do trabalho</h4>
+      <p>Metade do valor da coordenação é anunciar antes de escrever. Uma linha de comentário na issue ao pegá-la (branches e toques planejados) espelha o broadcast-before-write sem tocar no processo.</p>
+    </div>
+    <div class="card">
+      <h4>CRDT não entra</h4>
+      <p>Merge caractere-a-caractere conflita com edição cirúrgica e com a atribuição limpa de diff que o review adversarial exige. É registrado aqui como decisão informada, não como lacuna: quem traz vantagem é a camada de coordenação, e ela cabe num tracker.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="col">
+    <p>Mapa gerado a partir de Cho, S.; Lee, D. <em>AgentRoom: Concurrent Multi-Agent Coding in a CRDT-Backed Shared Workspace</em>, arXiv:2608.23740v1 (2026). Documento companheiro de <code>docs/anatomia.html</code>. Versão 0.1, 27 de agosto de 2026.</p>
+  </div>
+</footer>
+</div>
