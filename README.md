@@ -10,6 +10,42 @@ O primeiro é o **workloop**: playbook completo em [`playbooks/workloop.md`](pla
 mapa visual do processo em [`docs/anatomia.html`](docs/anatomia.html), e o caso de origem com os
 números em [`docs/caso-llm-council.md`](docs/caso-llm-council.md).
 
+## Em linguagem de negócio
+
+**O que é.** Um kit de processo pronto para contratar trabalho longo de IA sem perder o controle:
+o agente executa dezenas de tarefas encadeadas — correções, migrações, evoluções — com revisão
+independente a cada entrega, e o humano decide apenas nos pontos que importam: aprovar, gastar,
+publicar.
+
+**O problema que resolve.** Delegar a agentes desanda de formas conhecidas: eles esquecem decisões
+tomadas no meio do projeto, o trabalho acaba aprovado por quem mesmo o fez, o dinheiro é gasto sem
+que ninguém autorizasse, e meses depois ninguém consegue dizer por que aquele código existe. O
+workloop mantém **todo o estado em documentos persistidos** — a tarefa, a diretiva de execução, a
+memória que uma tarefa deixa para a próxima — que qualquer sessão nova lê sozinha, sem depender de
+memória ou de quem estava presente. E cerca o agente de gates: o que ele não pode fazer sozinho
+está enumerado.
+
+**O que você recebe.** Templates prontos para instanciar (contrato do repo, épico com grafo de
+dependências, diretiva por tarefa, handoff entre tarefas, runbook do modo em lote, frases exatas
+de aprovação), o playbook completo das três camadas e o caso de origem com números — incluindo a
+seção de onde o processo falhou.
+
+**Resultado medido no caso real** (15 tarefas encadeadas em um produto em produção): zero regressão
+no que já funcionava; cerca de 30 defeitos de desenho pegos pelo revisor independente — classes que
+nenhum teste automatizado pegaria; e a supervisão humana caiu para ~4 mensagens por tarefa no modo
+assistido e, no modo delegado, uma frase de lançamento mais a leitura do relatório por **lote** de
+tarefas.
+
+**Governança embutida.** O que nunca se delega ao agente: gastar dinheiro (aprovação por nome, com
+orçamento explícito, antes de gastar), decidir empate de revisão, mudar plano, redimensionar
+escopo, qualquer ação irreversível e o "ship it" final. Aprovação vale quando nomeia o objeto e
+carrega data e hora — "ok" não autoriza nada além do que foi imediatamente proposto.
+
+**Quando vale e quando não vale.** O processo tem custo: uma diretiva, uma revisão e um handoff por
+unidade de trabalho. Paga-se quando há mais de cinco unidades encadeadas, dependências entre elas
+e algo que não pode quebrar no caminho. Não se paga em tarefa única, nem em exploração sem destino,
+nem quando fiscalizar custa mais que refazer.
+
 ## O problema
 
 Você tem um trabalho de quinze unidades encadeadas, com dependências entre elas e um invariante
